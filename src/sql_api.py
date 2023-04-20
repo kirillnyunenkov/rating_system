@@ -1,5 +1,5 @@
 import sqlite3
-from sql_globals import *
+from globals import *
 
 con = sqlite3.connect(DATA_BASE_NAME)
 cursor = con.cursor()
@@ -12,8 +12,8 @@ def getNamesInList(user_id: str, list_id: str) -> list:
     return [row[0] for row in rows]
 
 
-def getNamesOfLists(user_id: str, is_sorted: bool = False) -> list:
-    cursor.execute((GET_RATINGS if is_sorted else GET_LISTS).format(user_id))
+def getNamesOfLists(user_id: str, is_sorted: bool, is_favorite: bool = False) -> list:
+    cursor.execute((GET_FAVORITES if is_favorite else GET_RATINGS if is_sorted else GET_LISTS).format(user_id))
     rows = cursor.fetchall()
     names = set()
     for row in rows:
@@ -25,24 +25,37 @@ def insertList(
         user_id: str,
         name: str,
         new_list: list,
-        is_sorted: bool = False) -> None:
+        is_sorted: bool,
+        is_favorite: bool) -> None:
     data = []
     for i, item in enumerate(new_list):
-        data.append((user_id, name, i + 1, item.name, int(is_sorted)))
+        data.append((user_id, name, i + 1, item.name, int(is_sorted), is_favorite))
     cursor.executemany(INSERT_LIST, data)
     con.commit()
 
 
 def isSorted(user_id: str, name: str) -> int:
     cursor.execute(IS_SORTED.format(user_id, name))
-    return cursor.fetchone()[0]
+    try:
+        return cursor.fetchone()[0]
+    except:
+        return 0
 
+def isFavorite(user_id: str, name: str) -> int:
+    cursor.execute(IS_FAVORITE.format(user_id, name))
+    try:
+        return cursor.fetchone()[0]
+    except:
+        return 0
 
 def insertItem(user_id: str, name: str, new_item: str) -> None:
     cursor.execute(INSERT_LIST, (user_id, name, len(getNamesInList(
-        user_id, name)) + 1, new_item, isSorted(user_id, name)))
+        user_id, name)) + 1, new_item, isSorted(user_id, name), isFavorite(user_id, name)))
     con.commit()
 
+def deleteItem(user: str, name_of_list: str, name_of_item: str) -> None:
+    cursor.execute(DELETE_ITEM.format(user, name_of_list, name_of_item))
+    con.commit()
 
 def deleteList(user_id: str, list_id: str) -> None:
     cursor.execute(DELETE_LIST.format(user_id, list_id))

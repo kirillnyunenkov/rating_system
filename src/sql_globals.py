@@ -1,8 +1,0 @@
-DATA_BASE_NAME = "src/data.db"
-INIT_SQL = "CREATE TABLE IF NOT EXISTS items(user_id TEXT, list_id TEXT, place INT, name TEXT, is_sorted BIT)"
-GET_ITEMS = "SELECT name FROM items WHERE user_id = '{}' AND list_id = '{}' ORDER BY place ASC"
-GET_LISTS = "SELECT list_id FROM items WHERE user_id = '{}'"
-GET_RATINGS = "SELECT list_id FROM items WHERE user_id = '{}' AND is_sorted = 1"
-INSERT_LIST = "INSERT INTO items VALUES(?, ?, ?, ?, ?)"
-DELETE_LIST = "DELETE FROM items WHERE user_id = '{}' AND list_id = '{}'"
-IS_SORTED = "SELECT is_sorted FROM items WHERE user_id = '{}' AND list_id = '{}'"

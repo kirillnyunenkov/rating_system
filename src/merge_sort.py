@@ -1,21 +1,7 @@
-import terminal_UI
 from named_list import Item
 from globals import *
 
-
-def compare(first: Item, second: Item) -> bool:
-    while True:
-        terminal_UI.sendMessage(
-            COMPARE_MESSAGE.format(
-                first.name, second.name))
-        answer = terminal_UI.getMessage()
-        if answer not in [FIRST, SECOND]:
-            terminal_UI.sendMessage(WRONG_COMPARE)
-        else:
-            return answer == SECOND
-
-
-def merge(first_list: list, second_list: list) -> list:
+def merge(first_list: list, second_list: list, compare) -> list:
     ans = []
     index_in_first = 0
     index_in_second = 0
@@ -37,9 +23,9 @@ def merge(first_list: list, second_list: list) -> list:
     return ans
 
 
-def sort(list_for_sorted: list) -> list:
+def sort(list_for_sorted: list, compare) -> list:
     if len(list_for_sorted) == 1:
         return list_for_sorted
-    sort_left = sort(list_for_sorted[:len(list_for_sorted) // 2])
-    sort_right = sort(list_for_sorted[len(list_for_sorted) // 2:])
-    return merge(sort_left, sort_right)
+    sort_left = sort(list_for_sorted[:len(list_for_sorted) // 2], compare)
+    sort_right = sort(list_for_sorted[len(list_for_sorted) // 2:], compare)
+    return merge(sort_left, sort_right, compare)
