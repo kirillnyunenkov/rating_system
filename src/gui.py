@@ -1,8 +1,6 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QLineEdit
 from functools import partial
-from named_list import Item, NamedList
-import merge_sort
 import data_api
 
 
@@ -58,7 +56,6 @@ class Ui_MainWindow(object):
         self.setRatingButtons(_translate)
         self.setFavoritesButtons(_translate)
 
-
     def setListButtons(self, _translate):
         for button in self.listButtons:
             button.deleteLater()
@@ -80,7 +77,6 @@ class Ui_MainWindow(object):
         self.addButton.setObjectName('addButton')
         self.addButton.setText(_translate("MainWindow", 'Add new list'))
         self.addButton.clicked.connect(self.addList)
-
 
     def setRatingButtons(self, _translate):
         for button in self.ratingButtons:
@@ -132,7 +128,11 @@ class Ui_MainWindow(object):
                 newListWindow,
                 textbox))
         self.goFurther = True
-        box.addButton(QDialogButtonBox.Close).clicked.connect(partial(self.closeWindow, newListWindow))
+        box.addButton(
+            QDialogButtonBox.Close).clicked.connect(
+            partial(
+                self.closeWindow,
+                newListWindow))
         newListWindow.layout.addWidget(box)
         newListWindow.setLayout(newListWindow.layout)
         newListWindow.setWindowFlags(QtCore.Qt.Window |
@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
                                      )
         newListWindow.exec_()
         if self.goFurther:
-            data_api.saveList(NamedList(self.newListName))
+            data_api.saveList(self.newListName, [])
             while self.addItem(self.newListName, None):
                 pass
         self.setupUi(self.MainWindow)
@@ -205,11 +205,13 @@ class Ui_MainWindow(object):
         ratingWindow.layout = QVBoxLayout()
         ratingWindow.layout.addWidget(QLabel(text))
         box = QDialogButtonBox()
-        box.addButton("Add to favorites", QDialogButtonBox.ActionRole).clicked.connect(
-        partial(
-            self.addToFavorites,
-            name,
-            ratingWindow))
+        box.addButton(
+            "Add to favorites",
+            QDialogButtonBox.ActionRole).clicked.connect(
+            partial(
+                self.addToFavorites,
+                name,
+                ratingWindow))
         ratingWindow.layout.addWidget(box)
         ratingWindow.setLayout(ratingWindow.layout)
         ratingWindow.exec_()
@@ -225,11 +227,13 @@ class Ui_MainWindow(object):
         favoriteWindow.setWindowTitle(name)
         favoriteWindow.layout.addWidget(QLabel(text))
         box = QDialogButtonBox()
-        box.addButton("Remove from favorites", QDialogButtonBox.ActionRole).clicked.connect(
-        partial(
-            self.removeFromFavorites,
-            name,
-            favoriteWindow))
+        box.addButton(
+            "Remove from favorites",
+            QDialogButtonBox.ActionRole).clicked.connect(
+            partial(
+                self.removeFromFavorites,
+                name,
+                favoriteWindow))
         favoriteWindow.layout.addWidget(box)
         favoriteWindow.setLayout(favoriteWindow.layout)
         favoriteWindow.exec_()
@@ -250,7 +254,8 @@ class Ui_MainWindow(object):
         deleteWindow.setWindowTitle('Delete item')
 
         deleteWindow.layout = QVBoxLayout()
-        deleteWindow.layout.addWidget(QLabel('\n'.join(names_of_items) + '\n\n'))
+        deleteWindow.layout.addWidget(
+            QLabel('\n'.join(names_of_items) + '\n\n'))
         deleteWindow.layout.addWidget(QLabel('Write name'))
         textbox = QLineEdit()
         deleteWindow.layout.addWidget(textbox)
@@ -264,7 +269,11 @@ class Ui_MainWindow(object):
                 names_of_items,
                 deleteWindow,
                 textbox))
-        box.addButton(QDialogButtonBox.Close).clicked.connect(partial(self.closeWindow, deleteWindow))
+        box.addButton(
+            QDialogButtonBox.Close).clicked.connect(
+            partial(
+                self.closeWindow,
+                deleteWindow))
         deleteWindow.layout.addWidget(box)
         deleteWindow.setLayout(deleteWindow.layout)
         deleteWindow.exec_()
@@ -280,7 +289,11 @@ class Ui_MainWindow(object):
             errorWindow.layout = QVBoxLayout()
             errorWindow.layout.addWidget(QLabel("Item doesn't consist"))
             box = QDialogButtonBox()
-            box.addButton(QDialogButtonBox.Close).clicked.connect(partial(self.closeWindow, errorWindow))
+            box.addButton(
+                QDialogButtonBox.Close).clicked.connect(
+                partial(
+                    self.closeWindow,
+                    errorWindow))
             errorWindow.layout.addWidget(box)
             errorWindow.setLayout(errorWindow.layout)
             errorWindow.exec_()
@@ -289,9 +302,9 @@ class Ui_MainWindow(object):
     def buildRating(self, name, listWindow):
         listWindow.accept()
         current_list = data_api.uploadList(name)
-        sorted_list = NamedList(name, merge_sort.sort(
-            current_list, lambda x, y: self.compare(x, y)))
-        data_api.saveSortedList(sorted_list)
+        sorted_list = data_api.sort(
+            current_list, lambda x, y: self.compare(x, y))
+        data_api.saveSortedList(name, sorted_list)
         self.setupUi(self.MainWindow)
 
     def compare(self, first, second):
@@ -346,7 +359,11 @@ class Ui_MainWindow(object):
                 name,
                 itemWindow,
                 textbox))
-        box.addButton(QDialogButtonBox.Close).clicked.connect(partial(self.closeWindow, itemWindow))
+        box.addButton(
+            QDialogButtonBox.Close).clicked.connect(
+            partial(
+                self.closeWindow,
+                itemWindow))
         itemWindow.layout.addWidget(box)
         itemWindow.setLayout(itemWindow.layout)
         return itemWindow.exec_()
@@ -358,7 +375,7 @@ class Ui_MainWindow(object):
     def saveItem(self, name, itemWindow, textbox):
         text = textbox.text()
         itemWindow.accept()
-        data_api.saveItem(Item(text), name)
+        data_api.saveItem(text, name)
 
 
 if __name__ == "__main__":
