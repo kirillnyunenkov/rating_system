@@ -21,10 +21,10 @@ def saveSortedList(name_of_list: str, new_list: list) -> None:
     sql_api.insertList(DEFAULT_NAME, name_of_list, new_list, True, is_favorite)
 
 
-def addToFavorites(name_of_list: str) -> None:
+def addToFavorites(name_of_list: str, is_sorted: bool) -> None:
     old_list = uploadList(name_of_list)
     sql_api.deleteList(DEFAULT_NAME, name_of_list)
-    sql_api.insertList(DEFAULT_NAME, name_of_list, old_list, True, True)
+    sql_api.insertList(DEFAULT_NAME, name_of_list, old_list, is_sorted, True)
 
 
 def removeFromFavorites(name_of_list: str) -> None:
@@ -41,6 +41,8 @@ def uploadList(name_of_list: str) -> list:
     names = sql_api.getNamesInList(DEFAULT_NAME, name_of_list)
     return list(map(Item, names))
 
+def isSorted(name_of_list: str) -> bool:
+    return sql_api.isSorted(DEFAULT_NAME, name_of_list)
 
 def deleteList(list_id: str) -> None:
     sql_api.deleteList(DEFAULT_NAME, list_id)

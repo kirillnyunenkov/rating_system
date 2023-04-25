@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QLineEdit
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox, QLineEdit, QCheckBox
 from functools import partial
 import data_api
 
@@ -29,7 +29,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.listNames = data_api.uploadNamesOfLists(False)
         self.ratingNames = data_api.uploadNamesOfLists(True)
-        self.favoritesNames = data_api.uploadNamesOfLists(True, True)
+        self.favoritesNames = data_api.uploadNamesOfLists(False, True)
         self.listButtons = []
         self.ratingButtons = []
         self.favoritesButtons = []
@@ -169,7 +169,14 @@ class Ui_MainWindow(object):
                 self.buildRating,
                 name,
                 listWindow))
-
+        box.addButton(
+            "Add to favorites",
+            QDialogButtonBox.ActionRole).clicked.connect(
+            partial(
+                self.addToFavorites,
+                name,
+                data_api.isSorted(name),
+                listWindow))
         box.addButton(
             "Delete list",
             QDialogButtonBox.ActionRole).clicked.connect(
@@ -189,9 +196,9 @@ class Ui_MainWindow(object):
         listWindow.setLayout(listWindow.layout)
         listWindow.exec_()
 
-    def addToFavorites(self, name, ratingWindow):
+    def addToFavorites(self, name, is_sorted, ratingWindow):
         ratingWindow.accept()
-        data_api.addToFavorites(name)
+        data_api.addToFavorites(name, is_sorted)
         self.setupUi(self.MainWindow)
 
     def printRating(self, name):
@@ -211,6 +218,7 @@ class Ui_MainWindow(object):
             partial(
                 self.addToFavorites,
                 name,
+                True,
                 ratingWindow))
         ratingWindow.layout.addWidget(box)
         ratingWindow.setLayout(ratingWindow.layout)
@@ -220,8 +228,11 @@ class Ui_MainWindow(object):
         favorite_to_print = data_api.uploadList(name)
         names_of_items = [item.name for item in favorite_to_print]
         text = ''
-        for i, item in enumerate(names_of_items):
-            text += str(i + 1) + ': ' + item + '\n'
+        if data_api.isSorted(name):
+            for i, item in enumerate(names_of_items):
+                text += str(i + 1) + ': ' + item + '\n'
+        else:
+            text = '\n'.join(names_of_items)
         favoriteWindow = QDialog()
         favoriteWindow.layout = QVBoxLayout()
         favoriteWindow.setWindowTitle(name)
@@ -252,23 +263,26 @@ class Ui_MainWindow(object):
         listWindow.accept()
         deleteWindow = QDialog()
         deleteWindow.setWindowTitle('Delete item')
-
         deleteWindow.layout = QVBoxLayout()
-        deleteWindow.layout.addWidget(
-            QLabel('\n'.join(names_of_items) + '\n\n'))
-        deleteWindow.layout.addWidget(QLabel('Write name'))
-        textbox = QLineEdit()
-        deleteWindow.layout.addWidget(textbox)
+        check_boxes = []
+        topShift = 20
+        for name_of_item in names_of_items:
+            check_box = QCheckBox()
+            check_box.name = name_of_item
+            check_box.setText(name_of_item)
+            check_box.setGeometry(QtCore.QRect(20, topShift, 100, 30))
+            check_boxes.append(check_box)
+            deleteWindow.layout.addWidget(check_box)
+            topShift += 40
         box = QDialogButtonBox()
         box.addButton(
-            "Delete this item",
+            "Delete items",
             QDialogButtonBox.ActionRole).clicked.connect(
             partial(
-                self.deleteItem,
+                self.deleteItems,
                 name,
-                names_of_items,
                 deleteWindow,
-                textbox))
+                check_boxes))
         box.addButton(
             QDialogButtonBox.Close).clicked.connect(
             partial(
@@ -278,25 +292,11 @@ class Ui_MainWindow(object):
         deleteWindow.setLayout(deleteWindow.layout)
         deleteWindow.exec_()
 
-    def deleteItem(self, name, names_of_items, deleteWindow, textbox):
+    def deleteItems(self, name, deleteWindow, check_boxes):
         deleteWindow.accept()
-        text = textbox.text()
-        if text in names_of_items:
-            data_api.deleteItem(text, name)
-        else:
-            errorWindow = QDialog()
-            errorWindow.setWindowTitle('Error')
-            errorWindow.layout = QVBoxLayout()
-            errorWindow.layout.addWidget(QLabel("Item doesn't consist"))
-            box = QDialogButtonBox()
-            box.addButton(
-                QDialogButtonBox.Close).clicked.connect(
-                partial(
-                    self.closeWindow,
-                    errorWindow))
-            errorWindow.layout.addWidget(box)
-            errorWindow.setLayout(errorWindow.layout)
-            errorWindow.exec_()
+        for box in check_boxes:
+            if box.isChecked():
+                data_api.deleteItem(box.name, name)
         self.setupUi(self.MainWindow)
 
     def buildRating(self, name, listWindow):
